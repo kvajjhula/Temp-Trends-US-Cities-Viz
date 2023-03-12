@@ -1,10 +1,11 @@
-var margin = { top: 10, right: 100, bottom: 30, left: 70 },
-    width = 1200 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+var margin = { top: 50, right: 190, bottom: 90, left: 70 },
+    width = 1500 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
 
 // append the svg object to the body of the page
 var svg = d3.select("#my_dataviz")
     .append("svg")
+    .style("border", "1px solid black")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
@@ -12,7 +13,7 @@ var svg = d3.select("#my_dataviz")
         "translate(" + margin.left + "," + margin.top + ")");
 
 //Read the data
-d3.csv("KSEA.csv").then(function(data) {
+d3.csv("KSEA.csv").then(function (data) {
     console.log(data);
     // List of groups (here I have one group per column)
     var allGroup = ["actual_mean_temp", "actual_min_temp", "actual_max_temp"]
@@ -36,14 +37,14 @@ d3.csv("KSEA.csv").then(function(data) {
 
     // Add X axis --> it is a date format
     var x = d3.scaleTime()
-    .domain(d3.extent(dataReady[0].values, function(d) { return d.date; }))
-    .range([0, width]);
+        .domain(d3.extent(dataReady[0].values, function (d) { return d.date; }))
+        .range([0, width]);
     svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x)
-        .tickFormat(d3.timeFormat("%b")) // Format tick labels as abbreviated month names
-        .ticks(d3.timeMonth.every(1)) // Display tick marks every month
-    );
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x)
+            .tickFormat(d3.timeFormat("%b")) // Format tick labels as abbreviated month names
+            .ticks(d3.timeMonth.every(1)) // Display tick marks every month
+        );
 
 
     // Add Y axis
@@ -67,39 +68,45 @@ d3.csv("KSEA.csv").then(function(data) {
         .style("stroke-width", 2)
         .style("fill", "none")
 
-    // Add the points
-    // svg
-    //     // First we need to enter in a group
-    //     .selectAll("myDots")
-    //     .data(dataReady)
-    //     .enter()
-    //     .append('g')
-    //     .style("fill", function (d) { return myColor(d.name) })
-    //     .attr("class", function (d) { return d.name })
-    //     // Second we need to enter in the 'values' part of this group
-    //     .selectAll("myPoints")
-    //     .data(function (d) { return d.values })
-    //     .enter()
-    //     .append("circle")
-    //     .attr("cx", function (d) { return x(d.date) })
-    //     .attr("cy", function (d) { return y(d.value) })
-    //     .attr("r", 2)
-    //     .attr("stroke", "white")
 
-    // Add a label at the end of each line
-    svg
-        .selectAll("myLabels")
+
+    // Define tooltip
+    var tooltip = d3.select("body")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0)
+        .style("background-color", "white")
+        .style("font-size", "17px")
+
+
+    // Add the points
+    svg.selectAll("myDots")
         .data(dataReady)
         .enter()
         .append('g')
-        .append("text")
-        .attr("class", function (d) { return d.name })
-        .datum(function (d) { return { name: d.name, value: d.values[d.values.length - 1] }; }) // keep only the last value of each time series
-        .attr("transform", function (d) { return "translate(" + x(d.value.date) + "," + y(d.value.value) + ")"; }) // Put the text at the position of the last point
-        .attr("x", 12) // shift the text a bit more right
-        .text(function (d) { return d.name; })
         .style("fill", function (d) { return myColor(d.name) })
-        .style("font-size", 15)
+        .attr("class", function (d) { return d.name })
+        .selectAll("myPoints")
+        .data(function (d) { return d.values })
+        .enter()
+        .append("circle")
+        .attr("cx", function (d) { return x(d.date) })
+        .attr("cy", function (d) { return y(d.value) })
+        .attr("r", 3)
+        .attr("stroke", "white")
+        .on("mouseover", function (d) {
+            tooltip.style("opacity", 1.0);
+            tooltip.html(d.date.toLocaleDateString() + " " + d.value + "°F")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mouseout", function (d) {
+            tooltip.style("opacity", 0);
+        })
+        .append("title")
+        .text(function (d) {
+            return d.value + "degrees Date: " + d.date.toLocaleDateString();
+        });
 
     // Add a legend (interactive)
     svg
@@ -108,9 +115,19 @@ d3.csv("KSEA.csv").then(function(data) {
         .enter()
         .append('g')
         .append("text")
-        .attr('x', function (d, i) { return 30 + i * 60 })
-        .attr('y', 30)
-        .text(function (d) { return d.name; })
+        .attr('x', 40)
+        .attr('y', function (d, i) { return 400 + i * 20 })
+        .text(function (d) {
+            if (d.name === "actual_mean_temp") {
+                return "Actual Mean Temperature";
+            } else if (d.name === "actual_min_temp") {
+                return "Actual Min Temperature";
+            } else if (d.name === "actual_max_temp") {
+                return "Actual Max Temperature";
+            } else {
+                return d.name;
+            }
+        })
         .style("fill", function (d) { return myColor(d.name) })
         .style("font-size", 15)
         .on("click", function (d) {
@@ -120,7 +137,31 @@ d3.csv("KSEA.csv").then(function(data) {
             d3.selectAll("." + d.name).transition().style("opacity", currentOpacity == 1 ? 0 : 1)
 
         })
+
+
+    // Append a title to the graph
+    svg.append("text")
+        .attr("x", (width / 2))
+        .attr("y", 0 - (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("font-size", "19px")
+        .text("Spread of Daily Max & Min Temperatures in Seattle in 2014-15");
+
+    // Append y axis label
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Temperature (°F)");
+
+    // Append x axis label
+    svg.append("text")
+        .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top - 10) + ")")
+        .style("text-anchor", "middle")
+        .text("Date");
+
+
 })
-
-
 
