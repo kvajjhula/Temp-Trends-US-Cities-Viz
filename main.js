@@ -5,7 +5,6 @@ var margin = { top: 50, right: 190, bottom: 90, left: 70 },
 // append the svg object to the body of the page
 var svg = d3.select("#my_dataviz")
     .append("svg")
-    .style("border", "1px solid black")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
@@ -68,8 +67,6 @@ d3.csv("KSEA.csv").then(function (data) {
         .style("stroke-width", 2)
         .style("fill", "none")
 
-
-
     // Define tooltip
     var tooltip = d3.select("body")
         .append("div")
@@ -77,7 +74,6 @@ d3.csv("KSEA.csv").then(function (data) {
         .style("opacity", 0)
         .style("background-color", "white")
         .style("font-size", "17px")
-
 
     // Add the points
     svg.selectAll("myDots")
@@ -95,8 +91,8 @@ d3.csv("KSEA.csv").then(function (data) {
         .attr("r", 3)
         .attr("stroke", "white")
         .on("mouseover", function (d) {
-            tooltip.style("opacity", 1.0);
-            tooltip.html(d.date.toLocaleDateString() + " " + d.value + "°F")
+            tooltip.style("opacity", 0.9);
+            tooltip.html("" + d.date.toLocaleDateString() + " " + d.value + "°F")
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY - 28) + "px");
         })
@@ -105,7 +101,7 @@ d3.csv("KSEA.csv").then(function (data) {
         })
         .append("title")
         .text(function (d) {
-            return d.value + "degrees Date: " + d.date.toLocaleDateString();
+            return ("" + d.date.toLocaleDateString() + " " + d.value + "°F");
         });
 
     // Add a legend (interactive)
@@ -138,7 +134,6 @@ d3.csv("KSEA.csv").then(function (data) {
 
         })
 
-
     // Append a title to the graph
     svg.append("text")
         .attr("x", (width / 2))
@@ -161,7 +156,5 @@ d3.csv("KSEA.csv").then(function (data) {
         .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.top - 10) + ")")
         .style("text-anchor", "middle")
         .text("Date");
-
-
 })
 
