@@ -1,4 +1,4 @@
-# INFO474-Final-Project
+# Temperature Trends in US Cities D3.js Visualization
 
 # Project Overview
 
